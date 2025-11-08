@@ -1,0 +1,3 @@
+id,email,password_hash,full_name,phone,created_at,profile_completed
+1,siya@gmail.com,$pbkdf2-sha256$29000$sVbK2ftfi5HSGiPknLPWGg$jBAQXckiti5wxPmA0D3hWHOhDiM3yXN95lei.cXzup0,siya,9988776655,2025-11-06T04:57:59.944029,False
+2,riya@gmail.com,$pbkdf2-sha256$29000$MMZYa.3dW6s1JoSQ8p7T.g$bJq7jxQGID95IZuWULlbJG0EvU5mojguGiQW9imZJ7U,riya,,2025-11-07T23:27:59.635650,False

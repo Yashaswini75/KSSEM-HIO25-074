@@ -1,0 +1,30 @@
+body {
+    background-color: #f4f6f8;
+    font-family: 'Poppins', sans-serif;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #d5ee15;
+    margin-bottom: 20px;
+}
+
+.navbar {
+    background-color: #417ef0;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-around;
+    border-radius: 10px;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 500;
+}
+
+.navbar a:hover {
+    color: #0056b3;
+}

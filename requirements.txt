@@ -1,0 +1,7 @@
+streamlit
+pandas
+pillow
+pytesseract
+pdf2image
+passlib
+python-dotenv

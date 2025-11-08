@@ -1,0 +1,25 @@
+# Ignore virtual environments
+venv/
+.env/
+
+# Byte-compiled / cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environment
+.DS_Store
+Thumbs.db
+
+# IDE / Editor settings
+.vscode/
+.idea/
+
+# Temporary and upload folders
+uploads/
+*.db
+*.sqlite3
+
+# Logs
+*.log

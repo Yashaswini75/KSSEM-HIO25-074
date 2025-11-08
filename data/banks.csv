@@ -1,0 +1,11 @@
+bank_id,bank_name,min_gpa,max_income,min_income,max_loan,base_interest_rate,processing_fee_pct,notes
+1,SBI,6.0,150000,0,1000000,10.5,1.0,Government-backed student loan
+2,HDFC,7.0,120000,0,800000,11.0,1.25,Requires collateral for >500000
+3,ICICI,6.5,130000,0,900000,10.8,1.0,Fast processing
+4,Axis Bank,6.0,160000,0,750000,10.9,1.0,Flexible tenure
+5,PNB,5.5,140000,0,600000,11.2,1.5,Good for rural applicants
+6,Canara Bank,6.0,150000,0,800000,10.7,1.0,Educational loan focus
+7,Bank of Baroda,6.0,155000,0,850000,10.6,1.25,Strong student network
+8,Yes Bank,6.5,130000,0,700000,11.5,1.0,Quick approvals
+9,IDBI,5.5,170000,0,500000,12.0,1.0,Micro education loans
+10,Union Bank,6.0,140000,0,650000,10.9,1.0,Campus tie-ups
