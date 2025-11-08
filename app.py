@@ -3,6 +3,9 @@ import pandas as pd
 from pathlib import Path
 import json
 import matplotlib.pyplot as plt
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 from datetime import datetime
 from auth_csv import login, register
 from ocr_pipeline import process_upload
@@ -788,10 +791,10 @@ def schedule_appointment_page():
 def my_loans_page():
     st.header("📅 My Loan Applications")
 
-    # Dummy loan data for now
+    # Dummy loan data for now (replace later with CSV or database)
     apps = [
         {"app_id": 1, "status": "Pending"},
-        {"app_id": 2, "status": "Approved"}
+        {"app_id": 2, "status": "Approved", "bank_name": "State Bank of India"}
     ]
 
     st.success(f"Found {len(apps)} loan application(s).")
@@ -802,7 +805,7 @@ def my_loans_page():
             if app["status"].lower() == "approved":
                 st.subheader("📈 Loan Payment Progress (Line Graph)")
 
-                # Example payment history data (replace later with real data)
+                # Example payment history data
                 data = {
                     "Date": [
                         "2025-09-01",
@@ -838,8 +841,173 @@ def my_loans_page():
                 st.write(f"**Total Paid So Far:** ₹{total_paid:,}")
                 st.write(f"**Remaining Principal:** ₹{remaining:,}")
 
+                # ----------------------------
+                #  LOAN TAKEOVER - TWO STEP FLOW
+                # ----------------------------
+                st.markdown("---")
+                st.subheader("🔁 Loan Takeover")
+
+                if "takeover_step" not in st.session_state:
+                    st.session_state["takeover_step"] = 0
+                if "chosen_bank" not in st.session_state:
+                    st.session_state["chosen_bank"] = None
+
+                # Step 0: start button
+                if st.session_state["takeover_step"] == 0:
+                    if st.button(f"Request Loan Takeover for Application {app['app_id']}"):
+                        st.session_state["takeover_step"] = 1
+                        st.rerun()
+
+                # ----------------------------------------------------
+                # STEP 1 - Choose Bank
+                # ----------------------------------------------------
+                elif st.session_state["takeover_step"] == 1:
+                    st.info("Step 1 of 2 – Choose the bank you’d like to take over your loan.")
+
+                    # Example bank list and rates (replace with data/banks.csv if available)
+                    all_banks = [
+                        {"id": "SBI", "name": "State Bank of India", "rate": 8.15},
+                        {"id": "PNB", "name": "Punjab National Bank", "rate": 8.75},
+                        {"id": "BoB", "name": "Bank of Baroda", "rate": 8.55},
+                        {"id": "Canara", "name": "Canara Bank", "rate": 8.60},
+                        {"id": "HDFC", "name": "HDFC Bank", "rate": 9.25},
+                        {"id": "ICICI", "name": "ICICI Bank", "rate": 9.00},
+                        {"id": "Axis", "name": "Axis Bank", "rate": 8.90},
+                        {"id": "IDBI", "name": "IDBI Bank", "rate": 8.85},
+                        {"id": "Indian", "name": "Indian Bank", "rate": 8.65},
+                    ]
+
+                    current_bank = app.get("bank_name") or app.get("bank_id") or ""
+                    available_banks = [b for b in all_banks if b["name"] != current_bank and b["id"] != current_bank]
+
+                    choice = st.selectbox(
+                        "Select takeover bank",
+                        ["-- select bank --"]
+                        + [f"{b['name']} — {b['rate']} % p.a." for b in available_banks],
+                        key=f"bank_select_{app['app_id']}"
+                    )
+
+                    if choice != "-- select bank --":
+                        chosen = next(b for b in available_banks if f"{b['name']} — {b['rate']} % p.a." == choice)
+                        st.session_state["chosen_bank"] = chosen
+                        if st.button("Next → Preview Terms"):
+                            st.session_state["takeover_step"] = 2
+                            st.rerun()
+
+                    if st.button("Cancel"):
+                        st.session_state["takeover_step"] = 0
+                        st.session_state["chosen_bank"] = None
+                        st.rerun()
+
+                # ----------------------------------------------------
+                # STEP 2 - Preview & Confirm
+                # ----------------------------------------------------
+                elif st.session_state["takeover_step"] == 2:
+                    chosen_bank = st.session_state["chosen_bank"]
+                    st.info(f"Step 2 of 2 – Preview Takeover Details for {chosen_bank['name']}")
+
+                    total_amount = float(app.get("total_amount", app.get("loan_amount", 0) or 100000))
+                    paid_principal = float(app.get("paid_amount", app.get("principal_paid", 0) or 0))
+                    remaining_principal = max(total_amount - paid_principal, 0.0)
+
+                    tenure_years = float(app.get("tenure_years", 5))
+                    total_months = int(tenure_years * 12)
+                    payments_made = int(app.get("payments_made", 0))
+                    remaining_months = max(total_months - payments_made, 1)
+
+                    r = chosen_bank["rate"] / 12 / 100
+                    emi = remaining_principal * r * (1 + r) ** remaining_months / ((1 + r) ** remaining_months - 1)
+                    total_interest = emi * remaining_months - remaining_principal
+
+                    st.markdown("### 🧾 Takeover Summary")
+                    st.write(f"**Chosen Bank:** {chosen_bank['name']}")
+                    st.write(f"**Rate of Interest:** {chosen_bank['rate']} % p.a.")
+                    st.write(f"**Remaining Principal:** ₹ {remaining_principal:,.2f}")
+                    st.write(f"**Remaining Tenure:** {remaining_months} months")
+                    st.write(f"**Estimated EMI:** ₹ {emi:,.2f}")
+                    st.write(f"**Total Interest (New Bank):** ₹ {total_interest:,.2f}")
+
+                    # ----------------------------------------------------
+                    # DOWNLOAD NOC FROM PREVIOUS BANK
+                    # ----------------------------------------------------
+                    import io
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import A4
+
+                    previous_bank = app.get("bank_name", "Your Previous Bank")
+
+                    st.markdown("### 🧾 Download NOC from Previous Bank")
+
+                    if st.button(f"⬇️ Download NOC from {previous_bank}"):
+                        # Generate NOC PDF dynamically
+                        buffer = io.BytesIO()
+                        c = canvas.Canvas(buffer, pagesize=A4)
+                        text = c.beginText(60, 750)
+                        text.setFont("Helvetica", 12)
+                        text.textLine(f"Date: {pd.Timestamp.now().strftime('%d-%m-%Y')}")
+                        text.textLine("")
+                        text.textLine(f"To Whom It May Concern,")
+                        text.textLine("")
+                        text.textLine(f"This is to certify that {previous_bank} has no objection to the")
+                        text.textLine(f"transfer of the existing loan (Application ID: {app['app_id']})")
+                        text.textLine(f"to another financial institution as per the borrower's request.")
+                        text.textLine("")
+                        text.textLine("We confirm that all dues up to this date are settled,")
+                        text.textLine("and we issue this No Objection Certificate accordingly.")
+                        text.textLine("")
+                        text.textLine(f"Sincerely,")
+                        text.textLine(f"{previous_bank} - Loan Department")
+                        c.drawText(text)
+                        c.showPage()
+                        c.save()
+
+                        buffer.seek(0)
+                        st.download_button(
+                            label=f"📄 Click to Download NOC (from {previous_bank})",
+                            data=buffer,
+                            file_name=f"NOC_{previous_bank.replace(' ', '_')}_App{app['app_id']}.pdf",
+                            mime="application/pdf"
+                        )
+
+                    # Confirm / Cancel buttons
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("✅ Confirm Takeover"):
+                            import csv, os
+                            from datetime import datetime
+                            takeover_row = {
+                                "user_email": st.session_state.get("user_email", "unknown"),
+                                "app_id": app["app_id"],
+                                "new_bank_id": chosen_bank["id"],
+                                "new_bank_name": chosen_bank["name"],
+                                "new_rate": chosen_bank["rate"],
+                                "remaining_principal": remaining_principal,
+                                "requested_at": datetime.now().isoformat(),
+                                "status": "requested"
+                            }
+
+                            os.makedirs("data", exist_ok=True)
+                            path = "data/takeovers.csv"
+                            write_header = not os.path.exists(path)
+                            with open(path, "a", newline="", encoding="utf-8") as f:
+                                writer = csv.DictWriter(f, fieldnames=list(takeover_row.keys()))
+                                if write_header:
+                                    writer.writeheader()
+                                writer.writerow(takeover_row)
+
+                            st.success("🎉 Takeover request submitted! A bank officer will contact you shortly.")
+                            st.session_state["takeover_step"] = 0
+                            st.session_state["chosen_bank"] = None
+
+                    with col2:
+                        if st.button("⬅️ Back to Bank Selection"):
+                            st.session_state["takeover_step"] = 1
+                            st.rerun()
+
             else:
                 st.info("⏳ Application is still pending approval.")
+
+
 
 
 

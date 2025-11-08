@@ -1,0 +1,6 @@
+user_email,app_id,new_bank_id,new_bank_name,new_rate,remaining_principal,requested_at,status
+siya@gmail.com,2,PNB,Punjab National Bank,8.75,100000.0,2025-11-08T07:03:09.357314,requested
+siya@gmail.com,2,Canara,Canara Bank,8.6,100000.0,2025-11-08T07:05:13.635965,requested
+siya@gmail.com,2,BoB,Bank of Baroda,8.55,100000.0,2025-11-08T07:15:52.942359,requested
+siya@gmail.com,2,BoB,Bank of Baroda,8.55,100000.0,2025-11-08T07:30:00.872279,requested
+siya@gmail.com,2,BoB,Bank of Baroda,8.55,100000.0,2025-11-08T08:00:52.429452,requested
